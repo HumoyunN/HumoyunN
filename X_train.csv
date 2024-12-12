@@ -1,0 +1,39 @@
+import tensorflow as tf
+import numpy as np
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv1D, MaxPooling1D, Flatten, Dense, Dropout
+
+# Step 1: Load the training and test data from CSV files
+X_train = np.loadtxt('X_train.csv', delimiter=',').reshape(-1, 64, 1)
+X_test = np.loadtxt('X_test.csv', delimiter=',').reshape(-1, 64, 1)
+y_train = np.loadtxt('y_train.csv', delimiter=',')
+y_test = np.loadtxt('y_test.csv', delimiter=',')
+
+# Step 2: Define the CNN model architecture
+model = Sequential([
+    Conv1D(filters=32, kernel_size=3, activation='relu', input_shape=(X_train.shape[1], 1)),
+    MaxPooling1D(pool_size=2),
+    Dropout(0.25),
+    Conv1D(filters=64, kernel_size=3, activation='relu'),
+    MaxPooling1D(pool_size=2),
+    Dropout(0.25),
+    Flatten(),
+    Dense(128, activation='relu'),
+    Dropout(0.5),
+    Dense(len(np.unique(y_train)), activation='softmax')
+])
+
+# Step 3: Compile the model
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+
+# Step 4: Train the model
+history = model.fit(X_train, y_train, epochs=20, batch_size=32, validation_data=(X_test, y_test))
+
+# Step 5: Evaluate the model on the test data
+test_loss, test_accuracy = model.evaluate(X_test, y_test)
+
+# Step 6: Print the test accuracy
+print(f'Test Accuracy: {test_accuracy * 100:.2f}%')
+
+# Optional: Save the trained model
+model.save('cnn_intrusion_detection_model.h5')
